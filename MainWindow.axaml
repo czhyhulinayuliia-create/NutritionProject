@@ -1,0 +1,97 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:FinalNutritionProject"
+        x:Class="FinalNutritionProject.MainWindow"
+        x:DataType="local:MainWindow"
+        Title="Nutrition Planner" Width="480" Height="750"
+        WindowStartupLocation="CenterScreen" Background="#F0F4F8">
+
+    <Window.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="FontWeight" Value="Heavy"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="BorderBrush" Value="#1B365D"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Background" Value="White"/>
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto, *">
+        <Border Grid.Row="0" Height="110" Background="#1B365D">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="🥗 NUTRITION PRO" FontSize="28" FontWeight="Black" Foreground="White"/>
+                <TextBlock Text="Контрастний режим активовано" FontSize="12" Foreground="#A9CCE3" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Margin="20">
+            <StackPanel Spacing="15">
+                <Border Background="White" CornerRadius="12" Padding="20" BoxShadow="0 4 15 0 #30000000">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="📊 ВВЕДІТЬ ВАШІ ПАРАМЕТРИ:" FontWeight="Black" Foreground="#1B365D" FontSize="14"/>
+                        
+                        <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto">
+                            <StackPanel Grid.Column="0" Margin="0,0,5,10">
+                                <TextBlock Text="Вага (кг):" FontSize="12" FontWeight="Bold" Foreground="Black"/>
+                                <TextBox Name="WeightInput" Watermark="Напр: 75"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="5,0,0,10">
+                                <TextBlock Text="Зріст (см):" FontSize="12" FontWeight="Bold" Foreground="Black"/>
+                                <TextBox Name="HeightInput" Watermark="Напр: 180"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,5,0">
+                                <TextBlock Text="Вік:" FontSize="12" FontWeight="Bold" Foreground="Black"/>
+                                <TextBox Name="AgeInput" Watermark="Напр: 25"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="5,0,0,0">
+                                <TextBlock Text="Стать:" FontSize="12" FontWeight="Bold" Foreground="Black"/>
+                                <ComboBox Name="GenderInput" HorizontalAlignment="Stretch" SelectedIndex="0">
+                                    <ComboBoxItem>Чоловік</ComboBoxItem>
+                                    <ComboBoxItem>Жінка</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <TextBlock Text="🚫 АЛЕРГІЇ / ОБМЕЖЕННЯ:" FontSize="12" FontWeight="Black" Foreground="#C0392B" Margin="0,10,0,0"/>
+                        <TextBox Name="AllergyInput" Watermark="лактоза, риба, горіхи..."/>
+                        
+                        <Button Content="РОЗРАХУВАТИ МЕНЮ" Click="OnCalculateClick" 
+                                Background="#D35400" Foreground="White" Height="55" 
+                                FontSize="18" FontWeight="Black"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                                Margin="0,15,0,0" CornerRadius="8"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#0D47A1" CornerRadius="10" Padding="15">
+                    <StackPanel>
+                        <TextBlock Name="BmrResult" Text="ЧЕКАЮ НА ДАНІ..." 
+                                   HorizontalAlignment="Center" FontSize="20" 
+                                   FontWeight="Black" Foreground="#FFFFFF"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="🍽️ ВАШ РЕКОМЕНДОВАНИЙ РАЦІОН:" FontWeight="Black" Foreground="#1B365D" Margin="0,10,0,5"/>
+                <ListBox Name="ResultList" Background="Transparent" BorderThickness="0" Height="300">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="local:ProductUI">
+                            <Border Background="White" CornerRadius="8" Padding="15" Margin="0,4" BorderBrush="#1B365D" BorderThickness="1">
+                                <DockPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="Black" FontSize="15"/>
+                                    <TextBlock Text="{Binding Calories, StringFormat='{}{0} ккал'}" 
+                                               DockPanel.Dock="Right" Foreground="#0D47A1" 
+                                               FontWeight="Black" HorizontalAlignment="Right"/>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
