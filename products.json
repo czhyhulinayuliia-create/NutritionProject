@@ -1,0 +1,118 @@
+[
+  {
+    "Id": "1910558e-5f32-4682-8039-8914c992ef5e",
+    "Name": "\uD83E\uDD63 \u0412\u0456\u0432\u0441\u044F\u043D\u043A\u0430 \u0437 \u0431\u0430\u043D\u0430\u043D\u043E\u043C",
+    "Calories": 310,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u0421\u043D\u0456\u0434\u0430\u043D\u043E\u043A",
+    "DietRestrictions": [
+      "\u0433\u043B\u044E\u0442\u0435\u043D"
+    ]
+  },
+  {
+    "Id": "c3088f72-39c9-4ffd-9fcd-f5356fb090bd",
+    "Name": "\uD83E\uDD57 \u0421\u0430\u043B\u0430\u0442 \u0437 \u043A\u0443\u0440\u043A\u043E\u044E",
+    "Calories": 290,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u041E\u0431\u0456\u0434",
+    "DietRestrictions": []
+  },
+  {
+    "Id": "334662ef-f1b5-4e2a-9b0d-dd7d942b0935",
+    "Name": "\uD83C\uDF73 \u042F\u0454\u0447\u043D\u044F \u0437 \u0442\u043E\u043C\u0430\u0442\u0430\u043C\u0438",
+    "Calories": 260,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u0421\u043D\u0456\u0434\u0430\u043D\u043E\u043A",
+    "DietRestrictions": [
+      "\u044F\u0439\u0446\u044F"
+    ]
+  },
+  {
+    "Id": "e1e68b7d-73df-43eb-be02-046fd37ca842",
+    "Name": "\uD83D\uDC1F \u0424\u0456\u043B\u0435 \u043B\u043E\u0441\u043E\u0441\u044F",
+    "Calories": 450,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u0412\u0435\u0447\u0435\u0440\u044F",
+    "DietRestrictions": [
+      "\u0440\u0438\u0431\u0430"
+    ]
+  },
+  {
+    "Id": "a3e90a2a-83fc-4e3c-b86b-e8688a7cbf8a",
+    "Name": "\uD83E\uDD5B \u0419\u043E\u0433\u0443\u0440\u0442 \u0433\u0440\u0435\u0446\u044C\u043A\u0438\u0439",
+    "Calories": 120,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u041F\u0435\u0440\u0435\u043A\u0443\u0441",
+    "DietRestrictions": [
+      "\u043B\u0430\u043A\u0442\u043E\u0437\u0430"
+    ]
+  },
+  {
+    "Id": "dcd6d484-cf73-4cfc-ae85-2e6edd8792ea",
+    "Name": "\uD83E\uDD69 \u0421\u0442\u0435\u0439\u043A \u044F\u043B\u043E\u0432\u0438\u0447\u0438\u0439",
+    "Calories": 520,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u041E\u0431\u0456\u0434",
+    "DietRestrictions": []
+  },
+  {
+    "Id": "d9ea0d9e-b078-4a18-aa5b-adf48491b14f",
+    "Name": "\uD83E\uDD66 \u0411\u0440\u043E\u043A\u043E\u043B\u0456 \u043D\u0430 \u043F\u0430\u0440\u0443",
+    "Calories": 140,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u0412\u0435\u0447\u0435\u0440\u044F",
+    "DietRestrictions": []
+  },
+  {
+    "Id": "0b8ff47c-e577-4ac2-b0e4-ba4f265dea92",
+    "Name": "\uD83E\uDD67 \u0421\u0438\u0440\u043D\u0430 \u0437\u0430\u043F\u0456\u043A\u0430\u043D\u043A\u0430",
+    "Calories": 340,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u0421\u043D\u0456\u0434\u0430\u043D\u043E\u043A",
+    "DietRestrictions": [
+      "\u043B\u0430\u043A\u0442\u043E\u0437\u0430",
+      "\u044F\u0439\u0446\u044F"
+    ]
+  },
+  {
+    "Id": "7b175d01-7287-433f-9161-7cefa3bdedb0",
+    "Name": "\uD83E\uDD5C \u041C\u0438\u0433\u0434\u0430\u043B\u044C (\u0436\u043C\u0435\u043D\u044F)",
+    "Calories": 240,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u041F\u0435\u0440\u0435\u043A\u0443\u0441",
+    "DietRestrictions": [
+      "\u0433\u043E\u0440\u0456\u0445\u0438"
+    ]
+  },
+  {
+    "Id": "a0d59e5d-6112-4b3f-af91-3a19adb3f69b",
+    "Name": "\uD83E\uDD6A \u0421\u0435\u043D\u0434\u0432\u0456\u0447 \u0437 \u0442\u0443\u043D\u0446\u0435\u043C",
+    "Calories": 380,
+    "Proteins": 0,
+    "Fats": 0,
+    "Carbohydrates": 0,
+    "Category": "\u041E\u0431\u0456\u0434",
+    "DietRestrictions": [
+      "\u0440\u0438\u0431\u0430",
+      "\u0433\u043B\u044E\u0442\u0435\u043D"
+    ]
+  }
+]

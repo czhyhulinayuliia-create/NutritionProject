@@ -1,53 +1,23 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace FinalNutritionProject
 {
-    public class ProductUI
-    {
-        public string Name { get; set; }
-        public double Calories { get; set; }
-        public string Restriction { get; set; }
-
-        public ProductUI(string name, double calories, string restriction)
-        {
-            Name = name;
-            Calories = calories;
-            Restriction = restriction;
-        }
-    }
-
     public partial class MainWindow : Window
     {
-        private List<ProductUI> _database = new List<ProductUI>
-        {
-            new ProductUI("🥣 Вівсянка з бананом", 310, "глютен"),
-            new ProductUI("🥗 Салат з куркою", 290, ""),
-            new ProductUI("🍳 Яєчня з томатами", 260, "яйця"),
-            new ProductUI("🐟 Філе лосося", 450, "риба"),
-            new ProductUI("🥛 Йогурт грецький", 120, "лактоза"),
-            new ProductUI("🥩 Стейк яловичий", 520, ""),
-            new ProductUI("🥦 Броколі на пару", 140, ""),
-            new ProductUI("🥧 Сирна запіканка", 340, "лактоза, яйця"),
-            new ProductUI("🥜 Мигдаль (жменя)", 240, "горіхи"),
-            new ProductUI("🥪 Сендвіч з тунцем", 380, "риба, глютен"),
-            new ProductUI("🥔 Запечена картопля", 280, ""),
-            new ProductUI("🍛 Рис з овочами", 310, ""),
-            new ProductUI("🍤 Креветки гриль", 220, "риба"),
-            new ProductUI("🥣 Суп сочевичний", 250, ""),
-            new ProductUI("🍖 Курячі ніжки", 410, ""),
-            new ProductUI("🥗 Салат з тофу", 210, ""),
-            new ProductUI("🍏 Зелене яблуко", 90, ""),
-            new ProductUI("🥞 Млинці з творогом", 390, "глютен, лактоза, яйця"),
-            new ProductUI("🧀 Шматочок сиру", 110, "лактоза"),
-            new ProductUI("🥤 Протеїновий шейк", 190, "лактоза")
-        };
+        private readonly DataAccess _dbLayer = new DataAccess();
+        private readonly NutritionCalculator _logicLayer = new NutritionCalculator();
+        private List<Product> _productsTable;
 
         public MainWindow()
         {
             InitializeComponent();
+            _productsTable = _dbLayer.LoadProducts();
+            _dbLayer.LogAction("Application started.");
         }
 
         public void OnCalculateClick(object sender, RoutedEventArgs e)
@@ -55,22 +25,63 @@ namespace FinalNutritionProject
             double.TryParse(WeightInput.Text, out double w);
             double.TryParse(HeightInput.Text, out double h);
             int.TryParse(AgeInput.Text, out int a);
-            string allergies = AllergyInput.Text?.ToLower() ?? "";
+            string allergiesText = AllergyInput.Text ?? "";
 
-            double bmr = (GenderInput.SelectedIndex == 0) 
-                ? (10 * w + 6.25 * h - 5 * a + 5) 
-                : (10 * w + 6.25 * h - 5 * a - 161);
-
-            if (bmr > 500)
-                BmrResult.Text = $"🔥 ВАША НОРМА: {bmr:F0} ККАЛ";
-            else
+            if (w <= 0 || h <= 0 || a <= 0)
+            {
                 BmrResult.Text = "⚠️ ПЕРЕВІРТЕ ДАНІ";
+                _dbLayer.LogAction("Calculation error: invalid input.");
+                return;
+            }
 
-            var restrictions = allergies.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList();
+            var profile = new UserProfile
+            {
+                Weight = w,
+                Height = h,
+                Age = a,
+                Gender = (GenderInput.SelectedIndex == 0) ? "Чоловік" : "Жінка"
+            };
 
-            ResultList.ItemsSource = _database.Where(p => 
-                !restrictions.Any(r => p.Restriction.Contains(r))
-            ).ToList();
+            var restrictions = allergiesText.Split(',')
+                .Select(s => s.Trim())
+                .Where(s => !string.IsNullOrEmpty(s));
+
+            foreach (var res in restrictions)
+            {
+                profile.Allergies.Add(res);
+            }
+
+            double bmr = _logicLayer.CalculateBMR(profile);
+            BmrResult.Text = $"🔥 ВАША НОРМА: {bmr:F0} ККАЛ";
+
+            var filtered = _logicLayer.FilterProducts(_productsTable, profile.Allergies);
+            var mealPlan = _logicLayer.GeneratePlan(filtered, bmr);
+
+            var displayList = new List<ProductUI>();
+            foreach (var meal in mealPlan.Meals)
+            {
+                foreach (var p in meal.Products)
+                {
+                    displayList.Add(new ProductUI($"{meal.MealType}: {p.Name}", p.Calories, string.Join(", ", p.DietRestrictions)));
+                }
+            }
+
+            ResultList.ItemsSource = displayList;
+
+            StringBuilder report = new StringBuilder();
+            report.AppendLine("=== ЗВІТ ПРОГРАМИ NUTRITION PRO ===");
+            report.AppendLine($"Дата та час: {DateTime.Now}");
+            report.AppendLine($"Параметри: Вага {w} кг, Зріст {h} см, Вік {a}, Стать {profile.Gender}");
+            report.AppendLine($"Обмеження/Алергії: {allergiesText}");
+            report.AppendLine($"Розрахована добова норма: {bmr:F0} ккал");
+            report.AppendLine("\nЗгенероване меню:");
+            foreach (var item in displayList)
+            {
+                report.AppendLine($"- {item.Name} — {item.Calories} ккал");
+            }
+            
+            _dbLayer.ExportReport(report.ToString());
+            _dbLayer.LogAction($"Calculation successful for BMR = {bmr:F0}");
         }
     }
 }
