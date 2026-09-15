@@ -2,3 +2,5 @@
 [2026-06-25 18:32:57] Application started.
 [2026-06-25 18:33:29] Report exported.
 [2026-06-25 18:33:29] Calculation successful for BMR = 1755
+[2026-09-15 22:40:44] New user registered: julis@gmail.com
+[2026-09-15 22:44:19] User logged in: julis@gmail.com

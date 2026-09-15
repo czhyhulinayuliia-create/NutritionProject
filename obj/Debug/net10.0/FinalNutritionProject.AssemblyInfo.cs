@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FinalNutritionProject")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2f0d77a7844b306fa08a9a15d2eadead2ac9a91d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7e02488f72cd0acd175f81c4725e9d39c055556f")]
 [assembly: System.Reflection.AssemblyProductAttribute("FinalNutritionProject")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FinalNutritionProject")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

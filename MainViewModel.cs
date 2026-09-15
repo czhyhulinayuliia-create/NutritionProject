@@ -6,28 +6,20 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using FinalNutritionProject.Models;
+using FinalNutritionProject.Services;
 
 namespace FinalNutritionProject
 {
-    public class DisplayDish
-    {
-        public string Title { get; set; } = "";
-        public int EnergyValue { get; set; }
-        public string GroupLabel { get; set; } = "";
-        public string Tags { get; set; } = "";
-    }
-
     public class RelayCommand : ICommand
     {
         private readonly Action _execute;
         private readonly Func<bool>? _canExecute;
-
         public RelayCommand(Action execute, Func<bool>? canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
-
         public bool CanExecute(object? parameter) => _canExecute == null || _canExecute();
         public void Execute(object? parameter) => _execute();
         public event EventHandler? CanExecuteChanged;
@@ -36,295 +28,332 @@ namespace FinalNutritionProject
 
     public class MainDashboardViewModel : INotifyPropertyChanged
     {
-        private string _systemStatus = "Доступ: Обмежено";
-        private string _authLogin = "";
-        private string _authToken = "";
-        private string _userWeight = "80";
-        private string _userHeight = "180";
-        private string _userAge = "30";
-        private int _activityRatingIndex = 1;
-        private int _strategyTargetIndex = 1;
-        private string _stopWordsInput = "";
-        private string _energySummaryText = "0 ккал";
-        private string _distributionSummaryText = "Б:0г Ж:0г В:0г";
-        private string _formTitle = "";
-        private string _formEnergy = "";
-        private int _formTypeIndex = 0;
-        private string _formTags = "";
-        private string _filterQuery = "";
-        private DisplayDish? _targetSelectedDish;
+        private readonly DataRepository _repository = new DataRepository();
+        private List<UserAccount> _users = new List<UserAccount>();
+        private UserAccount? _currentUser;
 
-        public ObservableCollection<DisplayDish> GlobalDishesDatabase { get; set; } = new();
-        public ObservableCollection<DisplayDish> ActiveDietCollection { get; set; } = new();
+        private bool _isLoggedIn = false;
+        public bool IsLoggedIn { get => _isLoggedIn; set { SetField(ref _isLoggedIn, value); OnPropertyChanged(nameof(IsLoggedOut)); } }
+        public bool IsLoggedOut => !IsLoggedIn;
 
-        public string SystemStatus { get => _systemStatus; set => SetField(ref _systemStatus, value); }
-        public string AuthLogin { get => _authLogin; set => SetField(ref _authLogin, value); }
-        public string AuthToken { get => _authToken; set => SetField(ref _authToken, value); }
-        public string UserWeight { get => _userWeight; set => SetField(ref _userWeight, value); }
-        public string UserHeight { get => _userHeight; set => SetField(ref _userHeight, value); }
-        public string UserAge { get => _userAge; set => SetField(ref _userAge, value); }
-        public int ActivityRatingIndex { get => _activityRatingIndex; set => SetField(ref _activityRatingIndex, value); }
-        public int StrategyTargetIndex { get => _strategyTargetIndex; set => SetField(ref _strategyTargetIndex, value); }
-        public string StopWordsInput { get => _stopWordsInput; set => SetField(ref _stopWordsInput, value); }
-        public string EnergySummaryText { get => _energySummaryText; set => SetField(ref _energySummaryText, value); }
-        public string DistributionSummaryText { get => _distributionSummaryText; set => SetField(ref _distributionSummaryText, value); }
-        public string FormTitle { get => _formTitle; set => SetField(ref _formTitle, value); }
-        public string FormEnergy { get => _formEnergy; set => SetField(ref _formEnergy, value); }
-        public int FormTypeIndex { get => _formTypeIndex; set => SetField(ref _formTypeIndex, value); }
-        public string FormTags { get => _formTags; set => SetField(ref _formTags, value); }
-        public string FilterQuery
-        {
-            get => _filterQuery;
-            set
-            {
-                SetField(ref _filterQuery, value);
-                ApplyFilter();
-            }
-        }
-        public DisplayDish? TargetSelectedDish { get => _targetSelectedDish; set => SetField(ref _targetSelectedDish, value); }
+        public string AuthUsername { get; set; } = "";
+        public string AuthPassword { get; set; } = "";
+        private string _authMessage = "";
+        public string AuthMessage { get => _authMessage; set => SetField(ref _authMessage, value); }
 
-        public ICommand ProcessAuthCommand { get; }
-        public ICommand BuildDietStructureCommand { get; }
-        public ICommand FileExportCommand { get; }
-        public ICommand RemoveDishCommand { get; }
+        public string InputWeight { get; set; } = "75";
+        public string InputHeight { get; set; } = "178";
+        public string InputAge { get; set; } = "25";
+        public int SelectedGenderIndex { get; set; } = 0;
+        public int SelectedActivityIndex { get; set; } = 1;
+        public int SelectedGoalIndex { get; set; } = 1;
+        public string InputAllergies { get; set; } = "";
+
+        private string _validationError = "";
+        public string ValidationError { get => _validationError; set => SetField(ref _validationError, value); }
+
+        private string _targetSummary = "0 ккал";
+        public string TargetSummary { get => _targetSummary; set => SetField(ref _targetSummary, value); }
+        private string _actualSummary = "0 ккал";
+        public string ActualSummary { get => _actualSummary; set => SetField(ref _actualSummary, value); }
+        private string _targetMacros = "Б:0г Ж:0г В:0г";
+        public string TargetMacros { get => _targetMacros; set => SetField(ref _targetMacros, value); }
+        private string _actualMacros = "Б:0г Ж:0г В:0г";
+        public string ActualMacros { get => _actualMacros; set => SetField(ref _actualMacros, value); }
+
+        private string _searchQuery = "";
+        public string SearchQuery { get => _searchQuery; set { SetField(ref _searchQuery, value); FilterCatalog(); } }
+
+        public ObservableCollection<DishItem> CatalogCollection { get; set; } = new ObservableCollection<DishItem>();
+        public ObservableCollection<DishItem> FilteredCatalogCollection { get; set; } = new ObservableCollection<DishItem>();
+        public ObservableCollection<DishItem> ActiveDietPlan { get; set; } = new ObservableCollection<DishItem>();
+
+        public DishItem? SelectedCatalogItem { get; set; }
+        public DishItem? SelectedPlanItem { get; set; }
+
+        public string FormTitle { get; set; } = "";
+        public int FormCategoryIndex { get; set; } = 0;
+        public string FormCalories { get; set; } = "300";
+        public string FormProtein { get; set; } = "15";
+        public string FormFat { get; set; } = "10";
+        public string FormCarbs { get; set; } = "30";
+        public string FormTags { get; set; } = "";
+
+        public ICommand LoginCommand { get; }
+        public ICommand RegisterCommand { get; }
+        public ICommand LogoutCommand { get; }
+        public ICommand SaveProfileAndCalculateCommand { get; }
+        public ICommand AddSelectedToPlanCommand { get; }
+        public ICommand RemoveFromPlanCommand { get; }
+        public ICommand ExportReportCommand { get; }
         public ICommand CreateDishCommand { get; }
+        public ICommand DeleteDishCommand { get; }
 
         public MainDashboardViewModel()
         {
-            ProcessAuthCommand = new RelayCommand(ExecuteAuth);
-            BuildDietStructureCommand = new RelayCommand(ExecuteCalculate);
-            FileExportCommand = new RelayCommand(ExecuteExport);
-            RemoveDishCommand = new RelayCommand(ExecuteRemoveDish);
+            LoginCommand = new RelayCommand(ExecuteLogin);
+            RegisterCommand = new RelayCommand(ExecuteRegister);
+            LogoutCommand = new RelayCommand(ExecuteLogout);
+            SaveProfileAndCalculateCommand = new RelayCommand(ExecuteSaveProfileAndCalculate);
+            AddSelectedToPlanCommand = new RelayCommand(ExecuteAddSelectedToPlan);
+            RemoveFromPlanCommand = new RelayCommand(ExecuteRemoveFromPlan);
+            ExportReportCommand = new RelayCommand(ExecuteExportReport);
             CreateDishCommand = new RelayCommand(ExecuteCreateDish);
+            DeleteDishCommand = new RelayCommand(ExecuteDeleteDish);
 
-            SeedDatabase();
-            ExecuteCalculate();
+            _users = _repository.LoadUsers();
+            var dishes = _repository.LoadDishes();
+            foreach (var d in dishes) CatalogCollection.Add(d);
+            FilterCatalog();
         }
 
-        private void SeedDatabase()
+        private void ExecuteLogin()
         {
-            GlobalDishesDatabase.Clear();
-            var items = new List<DisplayDish>
+            var user = _users.FirstOrDefault(u => u.Username.Equals(AuthUsername, StringComparison.OrdinalIgnoreCase) && u.PasswordHash == AuthPassword);
+            if (user != null)
             {
-                new DisplayDish { Title = "Сніданок: Сирники з медом та сметаною", EnergyValue = 520, GroupLabel = "Ранок", Tags = "сирники, кисломолочний сир, лактоза" },
-                new DisplayDish { Title = "Сніданок: Вівсяна каша з ягодами та мигдалем", EnergyValue = 420, GroupLabel = "Ранок", Tags = "вівсянка, каша, горіхи" },
-                new DisplayDish { Title = "Сніданок: Омлет із трьох яєць з томатами та зеленню", EnergyValue = 480, GroupLabel = "Ранок", Tags = "омлет, яйця, овочі" },
-                new DisplayDish { Title = "Сніданок: Авокадо-тост зі слабосолоним лососем", EnergyValue = 510, GroupLabel = "Ранок", Tags = "авокадо, тост, риба" },
-                new DisplayDish { Title = "Сніданок: Млинці з яблуками та корицею", EnergyValue = 490, GroupLabel = "Ранок", Tags = "млинці, фрукти, яблуко" },
-                new DisplayDish { Title = "Сніданок: Гранола з грецьким йогуртом", EnergyValue = 430, GroupLabel = "Ранок", Tags = "гранола, йогурт, горіхи" },
-                new DisplayDish { Title = "Сніданок: Яєчня з беконом та червоною квасолею", EnergyValue = 580, GroupLabel = "Ранок", Tags = "яєчня, бекон, квасоля" },
-                new DisplayDish { Title = "Сніданок: Рисова каша на кокосовому молоці з манго", EnergyValue = 460, GroupLabel = "Ранок", Tags = "каша, рис, манго" },
-                new DisplayDish { Title = "Сніданок: Шакшука з соковитими томатами та солодким перцем", EnergyValue = 500, GroupLabel = "Ранок", Tags = "шакшука, яйця, перець" },
-                new DisplayDish { Title = "Сніданок: Сендвіч із індичкою, сиром та листям салату", EnergyValue = 470, GroupLabel = "Ранок", Tags = "сендвіч, індичка, сир" },
-
-                new DisplayDish { Title = "Обід: Борщ український з яловичиною та пампушками", EnergyValue = 580, GroupLabel = "Обід", Tags = "борщ, суп, яловичина" },
-                new DisplayDish { Title = "Обід: Курячий суп із локшиною та зеленню", EnergyValue = 440, GroupLabel = "Обід", Tags = "суп, курятина, локшина" },
-                new DisplayDish { Title = "Обід: Крем-суп із печериць з вершками та грінками", EnergyValue = 420, GroupLabel = "Обід", Tags = "суп, гриби, вершки" },
-                new DisplayDish { Title = "Обід: Гречана каша з соковитою телячою котлетою", EnergyValue = 610, GroupLabel = "Обід", Tags = "гречка, котлета, телятина" },
-                new DisplayDish { Title = "Обід: Стейк із лосося на пару з диким рисом", EnergyValue = 680, GroupLabel = "Обід", Tags = "лосось, риба, рис" },
-                new DisplayDish { Title = "Обід: Паста Болоньєзе з соковитим фаршем та пармезаном", EnergyValue = 720, GroupLabel = "Обід", Tags = "паста, фарш, пармезан" },
-                new DisplayDish { Title = "Обід: Боул із філе індички, кіноа та авокадо", EnergyValue = 620, GroupLabel = "Обід", Tags = "боул, індичка, кіноа" },
-
-                new DisplayDish { Title = "Перекус: Протеїновий коктейль із бананом та молоком", EnergyValue = 300, GroupLabel = "Перекус", Tags = "протеїн, банан, молоко" },
-                new DisplayDish { Title = "Перекус: Жменя мигдалю, кеш'ю та свіже яблуко", EnergyValue = 270, GroupLabel = "Перекус", Tags = "горіхи, яблуко, кеш'ю" },
-                new DisplayDish { Title = "Перекус: Сендвіч із тунцем, огірком та салатом", EnergyValue = 350, GroupLabel = "Перекус", Tags = "тунець, сендвіч, огірок" },
-                new DisplayDish { Title = "Перекус: Кисломолочний сир із соковитою лохиною", EnergyValue = 260, GroupLabel = "Перекус", Tags = "сир, ягоди, лохина" },
-                new DisplayDish { Title = "Перекус: Запечене яблуко з корицею, медом та горіхами", EnergyValue = 230, GroupLabel = "Перекус", Tags = "яблуко, кориця, десерт" },
-
-                new DisplayDish { Title = "Вечеря: Запечена тріска з броколі та цвітною капустою", EnergyValue = 390, GroupLabel = "Вечір", Tags = "тріска, броколі, риба" },
-                new DisplayDish { Title = "Вечеря: Салат Цезар із тигровими креветками", EnergyValue = 450, GroupLabel = "Вечір", Tags = "салат, креветки, морепродукти" },
-                new DisplayDish { Title = "Вечеря: Куряче філе на грилі зі спаржею та лимоном", EnergyValue = 460, GroupLabel = "Вечір", Tags = "курка, спаржа, гриль" },
-                new DisplayDish { Title = "Вечеря: Філе індички з тушкованими кабачками та томатами", EnergyValue = 480, GroupLabel = "Вечір", Tags = "індичка, кабачки, овочі" },
-                new DisplayDish { Title = "Вечеря: Соковитий стейк із тунця з мікс-салатом", EnergyValue = 430, GroupLabel = "Вечір", Tags = "тунець, салат, риба" }
-            };
-
-            foreach (var item in items)
-            {
-                GlobalDishesDatabase.Add(item);
-            }
-        }
-
-        private void ExecuteAuth()
-        {
-            if (!string.IsNullOrWhiteSpace(AuthLogin) && !string.IsNullOrWhiteSpace(AuthToken))
-            {
-                SystemStatus = $"Доступ: VIP ({AuthLogin})";
+                _currentUser = user;
+                IsLoggedIn = true;
+                AuthMessage = "";
+                LoadUserProfile(user.Profile);
+                ExecuteSaveProfileAndCalculate();
+                Logger.Log($"User logged in: {user.Username}");
             }
             else
             {
-                SystemStatus = "Доступ: Обмежено";
+                AuthMessage = "Невірний логін або пароль!";
             }
         }
 
-        private void ExecuteCalculate()
+        private void ExecuteRegister()
         {
-            double.TryParse(UserWeight, out double w);
-            double.TryParse(UserHeight, out double h);
-            double.TryParse(UserAge, out double a);
-
-            if (w <= 0) w = 80;
-            if (h <= 0) h = 180;
-            if (a <= 0) a = 30;
-
-            double bmr = 10 * w + 6.25 * h - 5 * a + 5;
-
-            double actMult = ActivityRatingIndex switch
+            if (string.IsNullOrWhiteSpace(AuthUsername) || string.IsNullOrWhiteSpace(AuthPassword))
             {
-                0 => 1.2,
-                1 => 1.375,
-                2 => 1.55,
-                _ => 1.375
-            };
-
-            double tdee = bmr * actMult;
-
-            double targetCalories = StrategyTargetIndex switch
+                AuthMessage = "Заповніть логін і пароль!";
+                return;
+            }
+            if (_users.Any(u => u.Username.Equals(AuthUsername, StringComparison.OrdinalIgnoreCase)))
             {
-                0 => tdee - 500,
-                1 => tdee,
-                2 => tdee + 400,
-                _ => tdee
-            };
+                AuthMessage = "Користувач вже існує!";
+                return;
+            }
 
-            int finalCal = (int)Math.Round(targetCalories);
-            EnergySummaryText = $"{finalCal} ккал";
-
-            int p = (int)Math.Round((finalCal * 0.30) / 4);
-            int f = (int)Math.Round((finalCal * 0.30) / 9);
-            int c = (int)Math.Round((finalCal * 0.40) / 4);
-
-            DistributionSummaryText = $"Б:{p}г Ж:{f}г В:{c}г";
-
-            GenerateMenuForTarget(finalCal);
+            var newUser = new UserAccount { Username = AuthUsername, PasswordHash = AuthPassword };
+            _users.Add(newUser);
+            _repository.SaveUsers(_users);
+            _currentUser = newUser;
+            IsLoggedIn = true;
+            AuthMessage = "";
+            ExecuteSaveProfileAndCalculate();
+            Logger.Log($"New user registered: {newUser.Username}");
         }
 
-        private void GenerateMenuForTarget(int targetCalories)
+        private void ExecuteLogout()
         {
-            ActiveDietCollection.Clear();
+            Logger.Log($"User logged out: {_currentUser?.Username}");
+            _currentUser = null;
+            IsLoggedIn = false;
+            ActiveDietPlan.Clear();
+        }
 
-            var stops = StopWordsInput.ToLower().Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        private void LoadUserProfile(UserProfile p)
+        {
+            InputWeight = p.WeightKg.ToString();
+            InputHeight = p.HeightCm.ToString();
+            InputAge = p.Age.ToString();
+            SelectedGenderIndex = p.UserGender == Gender.Male ? 0 : 1;
+            SelectedActivityIndex = p.ActivityLevelIndex;
+            SelectedGoalIndex = p.GoalIndex;
+            InputAllergies = p.AllergyKeywords;
+            OnPropertyChanged(nameof(InputWeight));
+            OnPropertyChanged(nameof(InputHeight));
+            OnPropertyChanged(nameof(InputAge));
+            OnPropertyChanged(nameof(SelectedGenderIndex));
+            OnPropertyChanged(nameof(SelectedActivityIndex));
+            OnPropertyChanged(nameof(SelectedGoalIndex));
+            OnPropertyChanged(nameof(InputAllergies));
+        }
 
-            var available = GlobalDishesDatabase.Where(d =>
+        private void ExecuteSaveProfileAndCalculate()
+        {
+            ValidationError = "";
+            if (!double.TryParse(InputWeight, out double w) || w < 20 || w > 300)
             {
-                string tagTitle = (d.Title + " " + d.Tags).ToLower();
-                return !stops.Any(s => tagTitle.Contains(s));
+                ValidationError = "Помилка: Введіть некоректну вагу (20 - 300 кг).";
+                return;
+            }
+            if (!double.TryParse(InputHeight, out double h) || h < 50 || h > 250)
+            {
+                ValidationError = "Помилка: Введіть некоректний ріст (50 - 250 см).";
+                return;
+            }
+            if (!int.TryParse(InputAge, out int a) || a < 10 || a > 120)
+            {
+                ValidationError = "Помилка: Введіть некоректний вік (10 - 120 років).";
+                return;
+            }
+
+            var p = new UserProfile
+            {
+                WeightKg = w,
+                HeightCm = h,
+                Age = a,
+                UserGender = SelectedGenderIndex == 0 ? Gender.Male : Gender.Female,
+                ActivityLevelIndex = SelectedActivityIndex,
+                GoalIndex = SelectedGoalIndex,
+                AllergyKeywords = InputAllergies ?? ""
+            };
+
+            if (_currentUser != null)
+            {
+                _currentUser.Profile = p;
+                _repository.SaveUsers(_users);
+            }
+
+            var targets = NutritionCalculator.CalculateTargets(p);
+            TargetSummary = $"{targets.targetCalories} ккал";
+            TargetMacros = $"Б:{targets.protein}г Ж:{targets.fat}г В:{targets.carbs}г";
+
+            GenerateSmartDietPlan(targets.targetCalories, p.AllergyKeywords);
+        }
+
+        private void GenerateSmartDietPlan(int targetCalories, string allergies)
+        {
+            ActiveDietPlan.Clear();
+            var stopWords = allergies.ToLower().Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            var validDishes = CatalogCollection.Where(d =>
+            {
+                string combined = (d.Title + " " + d.Tags).ToLower();
+                return !stopWords.Any(sw => combined.Contains(sw));
             }).ToList();
 
-            if (!available.Any()) return;
+            if (!validDishes.Any()) return;
 
             var rand = new Random();
-
-            var breakfastList = available.Where(x => x.GroupLabel == "Ранок").OrderBy(_ => rand.Next()).ToList();
-            var lunchList = available.Where(x => x.GroupLabel == "Обід").OrderBy(_ => rand.Next()).ToList();
-            var snackList = available.Where(x => x.GroupLabel == "Перекус").OrderBy(_ => rand.Next()).ToList();
-            var dinnerList = available.Where(x => x.GroupLabel == "Вечір").OrderBy(_ => rand.Next()).ToList();
-
-            var breakfast = breakfastList.FirstOrDefault() ?? available[0];
-            ActiveDietCollection.Add(breakfast);
-
-            bool IsSimilar(DisplayDish candidate, IEnumerable<DisplayDish> currentList)
+            var categories = new[] { "Ранок", "Обід", "Перекус", "Вечір" };
+            foreach (var cat in categories)
             {
-                foreach (var item in currentList)
-                {
-                    var words1 = item.Title.ToLower().Split(new[] { ' ', ':', ',', '-' }, StringSplitOptions.RemoveEmptyEntries);
-                    var words2 = candidate.Title.ToLower().Split(new[] { ' ', ':', ',', '-' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    foreach (var w in words1)
-                    {
-                        if (w.Length > 3 && w != "сніданок" && w != "обід" && w != "вечеря" && w != "перекус" && words2.Contains(w))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                return false;
+                var match = validDishes.Where(d => d.Category == cat).OrderBy(_ => rand.Next()).FirstOrDefault();
+                if (match != null) ActiveDietPlan.Add(match);
             }
 
-            var lunch = lunchList.FirstOrDefault(l => !IsSimilar(l, ActiveDietCollection)) ?? lunchList.FirstOrDefault() ?? available[0];
-            ActiveDietCollection.Add(lunch);
-
-            var firstSnack = snackList.FirstOrDefault(s => !IsSimilar(s, ActiveDietCollection)) ?? snackList.FirstOrDefault();
-            if (firstSnack != null)
-            {
-                ActiveDietCollection.Add(firstSnack);
-            }
-
-            if (targetCalories >= 2500)
-            {
-                var secondSnack = snackList.FirstOrDefault(s => !ActiveDietCollection.Contains(s) && !IsSimilar(s, ActiveDietCollection));
-                if (secondSnack != null)
-                {
-                    ActiveDietCollection.Add(secondSnack);
-                }
-            }
-
-            var dinner = dinnerList.FirstOrDefault(d => !IsSimilar(d, ActiveDietCollection)) ?? dinnerList.FirstOrDefault() ?? available[0];
-            ActiveDietCollection.Add(dinner);
+            RecalculateActualTotals();
         }
 
-        private void ExecuteExport()
+        private void RecalculateActualTotals()
         {
-            try
-            {
-                using var sw = new StreamWriter("diet_export.txt");
-                sw.WriteLine("=== NutriLife Diet Export ===");
-                sw.WriteLine($"Норма: {EnergySummaryText}");
-                sw.WriteLine($"Нутрієнти: {DistributionSummaryText}");
-                sw.WriteLine("-----------------------------");
-                foreach (var dish in ActiveDietCollection)
-                {
-                    sw.WriteLine($"[{dish.GroupLabel}] {dish.Title} - {dish.EnergyValue} ккал ({dish.Tags})");
-                }
-            }
-            catch { }
+            int totalCal = ActiveDietPlan.Sum(d => d.Calories);
+            double totalP = ActiveDietPlan.Sum(d => d.Protein);
+            double totalF = ActiveDietPlan.Sum(d => d.Fat);
+            double totalC = ActiveDietPlan.Sum(d => d.Carbs);
+
+            ActualSummary = $"{totalCal} ккал";
+            ActualMacros = $"Б:{Math.Round(totalP)}г Ж:{Math.Round(totalF)}г В:{Math.Round(totalC)}г";
         }
 
-        private void ExecuteRemoveDish()
+        private void FilterCatalog()
         {
-            if (TargetSelectedDish != null)
+            FilteredCatalogCollection.Clear();
+            if (string.IsNullOrWhiteSpace(SearchQuery))
             {
-                ActiveDietCollection.Remove(TargetSelectedDish);
+                foreach (var item in CatalogCollection) FilteredCatalogCollection.Add(item);
+                return;
+            }
+
+            string q = SearchQuery.ToLower().Trim();
+            var matches = CatalogCollection.Where(d => 
+                d.Title.ToLower().Contains(q) || 
+                d.Category.ToLower().Contains(q) ||
+                d.Tags.ToLower().Contains(q) ||
+                StringDistance.LevenshteinDistance(d.Title.ToLower(), q) <= 3
+            ).ToList();
+
+            foreach (var item in matches) FilteredCatalogCollection.Add(item);
+        }
+
+        private void ExecuteAddSelectedToPlan()
+        {
+            if (SelectedCatalogItem != null)
+            {
+                ActiveDietPlan.Add(SelectedCatalogItem);
+                RecalculateActualTotals();
+            }
+        }
+
+        private void ExecuteRemoveFromPlan()
+        {
+            if (SelectedPlanItem != null)
+            {
+                ActiveDietPlan.Remove(SelectedPlanItem);
+                RecalculateActualTotals();
             }
         }
 
         private void ExecuteCreateDish()
         {
             if (string.IsNullOrWhiteSpace(FormTitle)) return;
-            int.TryParse(FormEnergy, out int kcal);
-            if (kcal <= 0) kcal = 300;
+            int.TryParse(FormCalories, out int cal);
+            double.TryParse(FormProtein, out double p);
+            double.TryParse(FormFat, out double f);
+            double.TryParse(FormCarbs, out double c);
 
-            string grp = FormTypeIndex switch
-            {
-                0 => "Ранок",
-                1 => "Обід",
-                2 => "Вечір",
-                _ => "Обід"
-            };
+            string cat = FormCategoryIndex switch { 0 => "Ранок", 1 => "Обід", 2 => "Перекус", _ => "Вечір" };
 
-            var newDish = new DisplayDish
+            var newDish = new DishItem
             {
                 Title = FormTitle,
-                EnergyValue = kcal,
-                GroupLabel = grp,
-                Tags = FormTags
+                Category = cat,
+                Calories = cal > 0 ? cal : 200,
+                Protein = p,
+                Fat = f,
+                Carbs = c,
+                Tags = FormTags ?? ""
             };
 
-            GlobalDishesDatabase.Add(newDish);
+            CatalogCollection.Add(newDish);
+            _repository.SaveDishes(CatalogCollection.ToList());
+            FilterCatalog();
+
             FormTitle = "";
-            FormEnergy = "";
-            FormTags = "";
+            OnPropertyChanged(nameof(FormTitle));
+            Logger.Log($"Created new dish: {newDish.Title}");
         }
 
-        private void ApplyFilter()
+        private void ExecuteDeleteDish()
         {
-            if (string.IsNullOrWhiteSpace(FilterQuery)) return;
-
-            var match = GlobalDishesDatabase
-                .FirstOrDefault(d => d.Title.ToLower().Contains(FilterQuery.ToLower()));
-
-            if (match != null && !ActiveDietCollection.Contains(match))
+            if (SelectedCatalogItem != null)
             {
-                ActiveDietCollection.Add(match);
+                string name = SelectedCatalogItem.Title;
+                CatalogCollection.Remove(SelectedCatalogItem);
+                _repository.SaveDishes(CatalogCollection.ToList());
+                FilterCatalog();
+                Logger.Log($"Deleted dish: {name}");
+            }
+        }
+
+        private void ExecuteExportReport()
+        {
+            try
+            {
+                string file = "diet_export_report.txt";
+                using var sw = new StreamWriter(file);
+                sw.WriteLine("=== NutriLife - Звіт з раціону ===");
+                sw.WriteLine($"Користувач: {_currentUser?.Username ?? "Гість"}");
+                sw.WriteLine($"Ціль: {TargetSummary} ({TargetMacros})");
+                sw.WriteLine($"Фактично в раціоні: {ActualSummary} ({ActualMacros})");
+                sw.WriteLine("------------------------------------------");
+                foreach (var item in ActiveDietPlan)
+                {
+                    sw.WriteLine($"[{item.Category}] {item.Title} - {item.Calories} ккал (Б:{item.Protein}г, Ж:{item.Fat}г, В:{item.Carbs}г)");
+                }
+                Logger.Log("Report exported successfully.");
+                ValidationError = "Успіх: Звіт збережено у diet_export_report.txt!";
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Export failed: {ex.Message}");
+                ValidationError = "Помилка збереження файлу!";
             }
         }
 
@@ -333,7 +362,6 @@ namespace FinalNutritionProject
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
             if (EqualityComparer<T>.Default.Equals(field, value)) return false;

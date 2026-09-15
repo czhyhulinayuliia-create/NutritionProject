@@ -1,52 +1,38 @@
-#nullable disable
+using System;
 using System.Collections.Generic;
 
-namespace FinalNutritionProject
+namespace FinalNutritionProject.Models
 {
-    public class Product
+    public enum Gender { Male, Female }
+
+    public class UserAccount
     {
-        public string Name { get; set; }
-        public double Calories { get; set; }
-        public string Category { get; set; }
-        public List<string> DietRestrictions { get; set; } = new List<string>();
+        public string Username { get; set; } = "";
+        public string PasswordHash { get; set; } = "";
+        public UserProfile Profile { get; set; } = new UserProfile();
     }
 
     public class UserProfile
     {
-        public double Weight { get; set; }
-        public double Height { get; set; }
-        public int Age { get; set; }
-        public string Gender { get; set; }
-        public int ActivityLevel { get; set; }
-        public int Goal { get; set; }
-        public List<string> Allergies { get; set; } = new List<string>();
+        public double WeightKg { get; set; } = 70;
+        public double HeightCm { get; set; } = 175;
+        public int Age { get; set; } = 25;
+        public Gender UserGender { get; set; } = Gender.Male;
+        public int ActivityLevelIndex { get; set; } = 1;
+        public int GoalIndex { get; set; } = 1;
+        public string AllergyKeywords { get; set; } = "";
     }
 
-    public class Meal
+    public class DishItem
     {
-        public string MealType { get; set; }
-        public List<Product> Products { get; set; } = new List<Product>();
-    }
-
-    public class DailyMealPlan
-    {
-        public List<Meal> Meals { get; set; } = new List<Meal>();
-        public double TotalCalories { get; set; }
-    }
-
-    public class ProductUI
-    {
-        public string Name { get; set; }
-        public double Calories { get; set; }
-        public string Category { get; set; }
-        public string Restriction { get; set; }
-
-        public ProductUI(string name, double calories, string category, string restriction)
-        {
-            Name = name;
-            Calories = calories;
-            Category = category;
-            Restriction = restriction;
-        }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Title { get; set; } = "";
+        public string Category { get; set; } = "";
+        public int Calories { get; set; }
+        public double Protein { get; set; }
+        public double Fat { get; set; }
+        public double Carbs { get; set; }
+        public int ServingSizeGrams { get; set; } = 100;
+        public string Tags { get; set; } = "";
     }
 }
