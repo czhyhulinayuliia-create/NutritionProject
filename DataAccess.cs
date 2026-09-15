@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,78 +8,52 @@ namespace FinalNutritionProject
 {
     public class DataAccess
     {
-        private readonly string _productsFile = "products.json";
-        private readonly string _logFile = "log.txt";
-
-        public void LogAction(string action)
-        {
-            try
-            {
-                File.AppendAllText(_logFile, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {action}\n");
-            }
-            catch { }
-        }
+        private const string JsonPath = "products.json";
+        private const string LogPath = "log.txt";
 
         public List<Product> LoadProducts()
         {
-            if (!File.Exists(_productsFile))
-            {
-                var defaultDb = GetDefaultProducts();
-                SaveProducts(defaultDb);
-                return defaultDb;
-            }
-            try
-            {
-                string json = File.ReadAllText(_productsFile);
-                return JsonSerializer.Deserialize<List<Product>>(json) ?? GetDefaultProducts();
-            }
-            catch
-            {
-                return GetDefaultProducts();
-            }
+            try {
+                if (!File.Exists(JsonPath)) {
+                    var list = GenerateBigMenu();
+                    SaveProducts(list);
+                    return list;
+                }
+                return JsonSerializer.Deserialize<List<Product>>(File.ReadAllText(JsonPath)) ?? GenerateBigMenu();
+            } catch { return GenerateBigMenu(); }
         }
 
-        public void SaveProducts(List<Product> products)
+        public void SaveProducts(List<Product> list)
         {
-            try
-            {
-                string json = JsonSerializer.Serialize(products, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(_productsFile, json);
-                LogAction("Database updated.");
-            }
-            catch (Exception ex)
-            {
-                LogAction($"Error saving database: {ex.Message}");
-            }
+            try {
+                File.WriteAllText(JsonPath, JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true }));
+            } catch { }
         }
 
-        public void ExportReport(string content)
-        {
-            try
-            {
-                File.WriteAllText("report.txt", content);
-                LogAction("Report exported.");
-            }
-            catch (Exception ex)
-            {
-                LogAction($"Error exporting report: {ex.Message}");
-            }
-        }
+        public void LogAction(string m) { try { File.AppendAllText(LogPath, $"[{DateTime.Now}] {m}\n"); } catch { } }
+        public void ExportReport(string c) { try { File.WriteAllText("report.txt", c); } catch { } }
 
-        private List<Product> GetDefaultProducts()
+        private List<Product> GenerateBigMenu()
         {
-            return new List<Product>
-            {
-                new Product { Name = "🥣 Вівсянка з бананом", Calories = 310, Category = "Сніданок", DietRestrictions = new List<string>{"глютен"} },
-                new Product { Name = "🥗 Салат з куркою", Calories = 290, Category = "Обід" },
-                new Product { Name = "🍳 Яєчня з томатами", Calories = 260, Category = "Сніданок", DietRestrictions = new List<string>{"яйця"} },
-                new Product { Name = "🐟 Філе лосося", Calories = 450, Category = "Вечеря", DietRestrictions = new List<string>{"риба"} },
-                new Product { Name = "🥛 Йогурт грецький", Calories = 120, Category = "Перекус", DietRestrictions = new List<string>{"лактоза"} },
-                new Product { Name = "🥩 Стейк яловичий", Calories = 520, Category = "Обід" },
-                new Product { Name = "🥦 Броколі на пару", Calories = 140, Category = "Вечеря" },
-                new Product { Name = "🥧 Сирна запіканка", Calories = 340, Category = "Сніданок", DietRestrictions = new List<string>{"лактоза", "яйця"} },
-                new Product { Name = "🥜 Мигдаль (жменя)", Calories = 240, Category = "Перекус", DietRestrictions = new List<string>{"горіхи"} },
-                new Product { Name = "🥪 Сендвіч з тунцем", Calories = 380, Category = "Обід", DietRestrictions = new List<string>{"риба", "глютен"} }
+            return new List<Product> {
+                new Product { Name = "🥣 Вівсяна каша з лохиною та медом", Calories = 290, Category = "Сніданок" },
+                new Product { Name = "🍳 Скрембл з трьох яєць та шпинатом", Calories = 340, Category = "Сніданок" },
+                new Product { Name = "🥞 Протеїнові млинці", Calories = 410, Category = "Сніданок", DietRestrictions = new List<string>{"лактоза"} },
+                new Product { Name = "🥪 Кранч-тост з лососем та гуакамоле", Calories = 380, Category = "Сніданок" },
+                new Product { Name = "🧇 Вафлі з сиропом агави", Calories = 360, Category = "Сніданок" },
+                new Product { Name = "🥩 Філе-міньйон з печеною картоплею", Calories = 620, Category = "Обід" },
+                new Product { Name = "🍲 Борщ з яловичиною та зеленню", Calories = 410, Category = "Обід" },
+                new Product { Name = "🐟 Стейк лосося на грилі з диким рисом", Calories = 510, Category = "Обід" },
+                new Product { Name = "🍜 Суп-локшина курячий", Calories = 280, Category = "Обід", DietRestrictions = new List<string>{"глютен"} },
+                new Product { Name = "🍛 Крем-суп з гарбуза та насіння", Calories = 310, Category = "Обід" },
+                new Product { Name = "🥗 Теплий салат з індичкою", Calories = 320, Category = "Вечеря" },
+                new Product { Name = "🥦 Котлети з тріски та броколі", Calories = 240, Category = "Вечеря" },
+                new Product { Name = "🐟 Хек запечений у фользі з томатами", Calories = 270, Category = "Вечеря" },
+                new Product { Name = "🍚 Різотто з морепродуктами", Calories = 440, Category = "Вечеря" },
+                new Product { Name = "🥛 Натуральний йогурт з чіа", Calories = 140, Category = "Перекус", DietRestrictions = new List<string>{"лактоза"} },
+                new Product { Name = "🥜 Мигдаль та кеш'ю", Calories = 240, Category = "Перекус", DietRestrictions = new List<string>{"горіхи"} },
+                new Product { Name = "🍎 Зелене яблуко", Calories = 65, Category = "Перекус" },
+                new Product { Name = "🍌 Стиглий банан", Calories = 95, Category = "Перекус" }
             };
         }
     }
