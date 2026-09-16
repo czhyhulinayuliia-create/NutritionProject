@@ -1,200 +1,161 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:FinalNutritionProject"
-        xmlns:m="using:FinalNutritionProject.Models"
+        xmlns:vm="clr-namespace:FinalNutritionProject"
         x:Class="FinalNutritionProject.MainWindow"
-        x:DataType="vm:MainDashboardViewModel"
-        Title="NutriLife - Комплексний Планувальник Харчування"
-        Width="1100" Height="750"
-        WindowStartupLocation="CenterScreen">
+        x:DataType="vm:MainViewModel"
+        Title="NutriLife - Персональний планувальник харчування"
+        Width="1050" Height="720" WindowStartupLocation="CenterScreen">
 
-    <Grid>
-        <Border IsVisible="{Binding IsLoggedOut}" Background="#1E1E1E" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <Border Background="#2D2D30" CornerRadius="8" Padding="30" Width="350" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="NutriLife Вхід" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
-                    
-                    <StackPanel Spacing="5">
-                        <TextBlock Text="Логін:" Foreground="#AAA"/>
-                        <TextBox Text="{Binding AuthUsername}"/>
-                    </StackPanel>
+    <Grid Margin="20">
+        <Border IsVisible="{Binding IsLoggedOut}" VerticalAlignment="Center" HorizontalAlignment="Center"
+                Background="#F5F5F5" CornerRadius="10" Padding="30" Width="400">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Ласкаво просимо до NutriLife" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
 
-                    <StackPanel Spacing="5">
-                        <TextBlock Text="Пароль:" Foreground="#AAA"/>
-                        <TextBox Text="{Binding AuthPassword}" PasswordChar="*"/>
-                    </StackPanel>
-
-                    <TextBlock Text="{Binding AuthMessage}" Foreground="#FF4444" FontWeight="Bold" HorizontalAlignment="Center"/>
-
-                    <Grid ColumnDefinitions="*, *">
-                        <Button Grid.Column="0" Content="Увійти" Command="{Binding LoginCommand}" Background="#007ACC" Foreground="White" Margin="0,0,5,0" HorizontalAlignment="Stretch"/>
-                        <Button Grid.Column="1" Content="Реєстрація" Command="{Binding RegisterCommand}" Background="#28A745" Foreground="White" Margin="5,0,0,0" HorizontalAlignment="Stretch"/>
-                    </Grid>
-                </StackPanel>
-            </Border>
-        </Border>
-
-        <Grid IsVisible="{Binding IsLoggedIn}" RowDefinitions="Auto, *">
-            <Border Grid.Row="0" Background="#252526" Padding="15">
-                <Grid ColumnDefinitions="*, Auto">
-                    <TextBlock Text="NutriLife - Планувальник Раціону" Foreground="White" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Content="Вийти з акаунта" Command="{Binding LogoutCommand}" Background="#C55353" Foreground="White"/>
-                </Grid>
-            </Border>
-
-            <TabControl Grid.Row="1" Margin="5">
-                <TabItem Header="Профіль та Ціль">
-                    <Grid ColumnDefinitions="350, *">
-                        <Border Grid.Column="0" Background="#2D2D30" Padding="15" Margin="5">
-                            <ScrollViewer>
-                                <StackPanel Spacing="12">
-                                    <TextBlock Text="Параметри тіла" Foreground="White" FontSize="16" FontWeight="Bold"/>
-                                    
-                                    <Grid ColumnDefinitions="*, *, *">
-                                        <StackPanel Grid.Column="0" Margin="2">
-                                            <TextBlock Text="Вага (кг)" Foreground="#AAA" FontSize="11"/>
-                                            <TextBox Text="{Binding InputWeight}"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="1" Margin="2">
-                                            <TextBlock Text="Ріст (см)" Foreground="#AAA" FontSize="11"/>
-                                            <TextBox Text="{Binding InputHeight}"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="2" Margin="2">
-                                            <TextBlock Text="Вік" Foreground="#AAA" FontSize="11"/>
-                                            <TextBox Text="{Binding InputAge}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <TextBlock Text="Стать" Foreground="#AAA" FontSize="12"/>
-                                    <ComboBox SelectedIndex="{Binding SelectedGenderIndex}" HorizontalAlignment="Stretch">
-                                        <ComboBoxItem Content="Чоловіча (+5 ккал)"/>
-                                        <ComboBoxItem Content="Жіноча (-161 ккал)"/>
-                                    </ComboBox>
-
-                                    <TextBlock Text="Фізична активність" Foreground="#AAA" FontSize="12"/>
-                                    <ComboBox SelectedIndex="{Binding SelectedActivityIndex}" HorizontalAlignment="Stretch">
-                                        <ComboBoxItem Content="Низька (сидяча)"/>
-                                        <ComboBoxItem Content="Помірна (1-3 тренування)"/>
-                                        <ComboBoxItem Content="Висока (4+ тренування)"/>
-                                    </ComboBox>
-
-                                    <TextBlock Text="Ціль харчування" Foreground="#AAA" FontSize="12"/>
-                                    <ComboBox SelectedIndex="{Binding SelectedGoalIndex}" HorizontalAlignment="Stretch">
-                                        <ComboBoxItem Content="Схуднення (-500 ккал)"/>
-                                        <ComboBoxItem Content="Підтримка ваги"/>
-                                        <ComboBoxItem Content="Набір маси (+400 ккал)"/>
-                                    </ComboBox>
-
-                                    <TextBlock Text="Алергени та заборонені продукти" Foreground="#AAA" FontSize="12"/>
-                                    <TextBox Text="{Binding InputAllergies}"/>
-
-                                    <Button Content="Зберегти та розрахувати" Command="{Binding SaveProfileAndCalculateCommand}" 
-                                            Background="#007ACC" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch"/>
-
-                                    <TextBlock Text="{Binding ValidationError}" Foreground="#FFB300" TextWrapping="Wrap" FontWeight="Bold"/>
-                                </StackPanel>
-                            </ScrollViewer>
-                        </Border>
-
-                        <Border Grid.Column="1" Background="#3E3E42" Margin="5" Padding="20" CornerRadius="5">
-                            <StackPanel Spacing="20">
-                                <TextBlock Text="Результати розрахунку" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                                
-                                <Grid ColumnDefinitions="*, *">
-                                    <Border Grid.Column="0" Background="#2D2D30" Padding="15" Margin="5" CornerRadius="5">
-                                        <StackPanel Spacing="5">
-                                            <TextBlock Text="ЦІЛЬОВА НОРМА" Foreground="#AAA" FontSize="12" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding TargetSummary}" Foreground="White" FontSize="24" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding TargetMacros}" Foreground="#4EC9B0" FontSize="16"/>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <Border Grid.Column="1" Background="#2D2D30" Padding="15" Margin="5" CornerRadius="5">
-                                        <StackPanel Spacing="5">
-                                            <TextBlock Text="ФАКТИЧНО В РАЦІОНІ" Foreground="#AAA" FontSize="12" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding ActualSummary}" Foreground="White" FontSize="24" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding ActualMacros}" Foreground="#FFB300" FontSize="16"/>
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
+                <TabControl>
+                    <TabItem Header="Вхід у систему">
+                        <Border Padding="0,15,0,0">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Авторизація користувача" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding AuthUsername}" Watermark="Введіть ваш логін"/>
+                                <TextBox Text="{Binding AuthPassword}" PasswordChar="*" Watermark="Введіть ваш пароль"/>
+                                <Button Content="Увійти в акаунт" Command="{Binding LoginCommand}" 
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
                             </StackPanel>
                         </Border>
-                    </Grid>
+                    </TabItem>
+
+                    <TabItem Header="Реєстрація">
+                        <Border Padding="0,15,0,0">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Створення нового акаунта" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding AuthUsername}" Watermark="Придумайте новий логін"/>
+                                <TextBox Text="{Binding AuthPassword}" PasswordChar="*" Watermark="Придумайте пароль"/>
+                                <Button Content="Зареєструватися" Command="{Binding RegisterCommand}" 
+                                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </TabItem>
+                </TabControl>
+            </StackPanel>
+        </Border>
+
+        <Grid IsVisible="{Binding IsLoggedIn}">
+            <TabControl>
+                <TabItem Header="Мій профіль та розрахунок">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="15" Margin="10">
+                            <TextBlock Text="Антропометричні дані та цілі" FontSize="18" FontWeight="Bold"/>
+                            <Grid ColumnDefinitions="150, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Вага (кг):" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding InputWeight}" Watermark="Наприклад: 70.5"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Зріст (см):" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding InputHeight}" Watermark="Наприклад: 175"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Вік (років):" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding InputAge}" Watermark="Наприклад: 22"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Стать:" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Row="3" Grid.Column="1" SelectedIndex="{Binding SelectedGenderIndex}" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Чоловіча"/>
+                                    <ComboBoxItem Content="Жіноча"/>
+                                </ComboBox>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Активність:" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Row="4" Grid.Column="1" SelectedIndex="{Binding SelectedActivityIndex}" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Мінімальна (сидячий спосіб життя)"/>
+                                    <ComboBoxItem Content="Слабка (легкі тренування 1-3 рази/тиж)"/>
+                                    <ComboBoxItem Content="Середня (тренування 3-5 разів/тиж)"/>
+                                    <ComboBoxItem Content="Висока (інтенсивні тренування)"/>
+                                </ComboBox>
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Ціль:" VerticalAlignment="Center"/>
+                                <ComboBox Grid.Row="5" Grid.Column="1" SelectedIndex="{Binding SelectedGoalIndex}" HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Схуднення (-15%)"/>
+                                    <ComboBoxItem Content="Підтримання ваги"/>
+                                    <ComboBoxItem Content="Набір маси (+15%)"/>
+                                </ComboBox>
+
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Алергії / Виключення:" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding InputAllergies}" Watermark="Наприклад: горіхи, молоко"/>
+                            </Grid>
+
+                            <Button Content="Розрахувати добову норму" Command="{Binding SaveProfileAndCalculateCommand}" 
+                                    HorizontalAlignment="Left" Padding="15,8"/>
+
+                            <Border Background="#EFEFEF" Padding="15" CornerRadius="8" Margin="0,10,0,0">
+                                <TextBlock Text="{Binding CalculationResultText}" TextWrapping="Wrap" FontSize="14" FontWeight="Medium"/>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
                 </TabItem>
 
-                <TabItem Header="Планувальник Раціону">
-                    <Grid RowDefinitions="*, Auto" Margin="5">
-                        <ListBox Grid.Row="0" ItemsSource="{Binding ActiveDietPlan}" SelectedItem="{Binding SelectedPlanItem}">
+                <TabItem Header="Каталог та управління стравами">
+                    <Grid RowDefinitions="Auto, *" ColumnDefinitions="*, 360" Margin="10">
+                        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="10" Margin="0,0,0,10">
+                            <TextBox Text="{Binding SearchQuery}" Watermark="Пошук страви за назвою або тегом..." />
+                        </StackPanel>
+
+                        <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Dishes}" SelectedItem="{Binding SelectedDish}" Margin="0,0,10,0">
                             <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="m:DishItem">
-                                    <Grid ColumnDefinitions="100, *, 200">
-                                        <Border Grid.Column="0" Background="#007ACC" CornerRadius="3" Padding="4">
-                                            <TextBlock Text="{Binding Category}" Foreground="White" HorizontalAlignment="Center"/>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Margin="10,0">
-                                            <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding Tags}" Foreground="#888" FontSize="11"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="2" HorizontalAlignment="Right">
-                                            <TextBlock Text="{Binding Calories, StringFormat='{}{0} ккал'}" FontWeight="Bold" Foreground="#4EC9B0"/>
-                                            <TextBlock Text="{Binding Protein, StringFormat='Б:{0}g'}" Foreground="#AAA" FontSize="11"/>
-                                        </StackPanel>
-                                    </Grid>
+                                <DataTemplate DataType="vm:DishItem">
+                                    <Border Padding="8" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="14"/>
+                                                <TextBlock Text="{Binding Category, StringFormat='Категорія: {0}'}" FontSize="12" Foreground="Gray"/>
+                                            </StackPanel>
+                                            
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding Calories, StringFormat='{}🔥 {0} ккал'}" FontWeight="Bold" Foreground="#D32F2F" HorizontalAlignment="Right"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding Protein, StringFormat='Б: {0}г'}" FontSize="11" Foreground="#555555"/>
+                                                    <TextBlock Text="|" FontSize="11" Foreground="#999999"/>
+                                                    <TextBlock Text="{Binding Fat, StringFormat='Ж: {0}г'}" FontSize="11" Foreground="#555555"/>
+                                                    <TextBlock Text="|" FontSize="11" Foreground="#999999"/>
+                                                    <TextBlock Text="{Binding Carbs, StringFormat='В: {0}г'}" FontSize="11" Foreground="#555555"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,10,0,0">
-                            <Button Content="Видалити з плану" Command="{Binding RemoveFromPlanCommand}" Background="#C55353" Foreground="White"/>
-                            <Button Content="Експортувати звіт" Command="{Binding ExportReportCommand}" Background="#28A745" Foreground="White"/>
-                        </StackPanel>
-                    </Grid>
-                </TabItem>
+                        <ScrollViewer Grid.Row="1" Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="15">
+                                <Border Background="#E3F2FD" Padding="15" CornerRadius="8" IsVisible="{Binding SelectedDish, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Обрана страва" FontWeight="Bold" FontSize="15" Foreground="#1565C0"/>
+                                        <TextBlock Text="{Binding SelectedDish.Title}" FontSize="16" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding SelectedDish.Calories, StringFormat='Калорійність: {0} ккал (порція {1}г)'}" Foreground="#D32F2F" FontWeight="SemiBold"/>
+                                        <Separator Height="1" Background="#B3E5FC"/>
+                                        <TextBlock Text="{Binding SelectedDish.Protein, StringFormat='• Білки: {0} г'}"/>
+                                        <TextBlock Text="{Binding SelectedDish.Fat, StringFormat='• Жири: {0} г'}"/>
+                                        <TextBlock Text="{Binding SelectedDish.Carbs, StringFormat='• Вуглеводи: {0} г'}"/>
+                                    </StackPanel>
+                                </Border>
 
-                <TabItem Header="Каталог Страва (CRUD)">
-                    <Grid ColumnDefinitions="320, *">
-                        <Border Grid.Column="0" Background="#2D2D30" Padding="15" Margin="5">
-                            <StackPanel Spacing="10">
-                                <TextBlock Text="Додати нову страву" Foreground="White" FontSize="16" FontWeight="Bold"/>
-                                <TextBox Text="{Binding FormTitle}"/>
-                                <ComboBox SelectedIndex="{Binding FormCategoryIndex}" HorizontalAlignment="Stretch">
-                                    <ComboBoxItem Content="Ранок"/>
-                                    <ComboBoxItem Content="Обід"/>
-                                    <ComboBoxItem Content="Перекус"/>
-                                    <ComboBoxItem Content="Вечір"/>
-                                </ComboBox>
-                                <TextBox Text="{Binding FormCalories}"/>
-                                <Grid ColumnDefinitions="*,*,*">
-                                    <TextBox Grid.Column="0" Text="{Binding FormProtein}"/>
-                                    <TextBox Grid.Column="1" Text="{Binding FormFat}"/>
-                                    <TextBox Grid.Column="2" Text="{Binding FormCarbs}"/>
-                                </Grid>
-                                <TextBox Text="{Binding FormTags}"/>
+                                <Border Background="#F9F9F9" Padding="15" CornerRadius="8">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Додати нову страву" FontWeight="Bold" FontSize="15"/>
+                                        
+                                        <TextBox Text="{Binding NewDishTitle}" Watermark="Назва страви"/>
+                                        <TextBox Text="{Binding NewDishCategory}" Watermark="Категорія (Сніданок/Обід/...)"/>
+                                        <TextBox Text="{Binding NewDishCalories}" Watermark="Калорії (ккал)"/>
+                                        <TextBox Text="{Binding NewDishProtein}" Watermark="Білки (г)"/>
+                                        <TextBox Text="{Binding NewDishFat}" Watermark="Жири (г)"/>
+                                        <TextBox Text="{Binding NewDishCarbs}" Watermark="Вуглеводи (г)"/>
+                                        <TextBox Text="{Binding NewDishServingSize}" Watermark="Порція (г)"/>
+                                        <TextBox Text="{Binding NewDishTags}" Watermark="Теги через кому"/>
 
-                                <Button Content="Створити страву" Command="{Binding CreateDishCommand}" Background="#28A745" Foreground="White" HorizontalAlignment="Stretch"/>
+                                        <Button Content="Зберегти страву" Command="{Binding CreateDishCommand}" 
+                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
-                        </Border>
-
-                        <Grid Grid.Column="1" RowDefinitions="Auto, *, Auto" Margin="5">
-                            <TextBox Grid.Row="0" Text="{Binding SearchQuery}" Margin="0,0,0,5"/>
-
-                            <ListBox Grid.Row="1" ItemsSource="{Binding FilteredCatalogCollection}" SelectedItem="{Binding SelectedCatalogItem}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate x:DataType="m:DishItem">
-                                        <Grid ColumnDefinitions="80, *, 150">
-                                            <TextBlock Grid.Column="0" Text="{Binding Category}" Foreground="#4EC9B0"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="Bold"/>
-                                            <TextBlock Grid.Column="2" Text="{Binding Calories, StringFormat='{}{0} ккал'}" HorizontalAlignment="Right"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-
-                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,5,0,0">
-                                <Button Content="Додати до поточного плану" Command="{Binding AddSelectedToPlanCommand}" Background="#007ACC" Foreground="White"/>
-                                <Button Content="Видалити з базі" Command="{Binding DeleteDishCommand}" Background="#C55353" Foreground="White"/>
-                            </StackPanel>
-                        </Grid>
+                        </ScrollViewer>
                     </Grid>
                 </TabItem>
             </TabControl>

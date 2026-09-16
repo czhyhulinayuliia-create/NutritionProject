@@ -7,7 +7,7 @@ namespace FinalNutritionProject
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainDashboardViewModel();
+            DataContext = new MainViewModel();
         }
     }
 }
